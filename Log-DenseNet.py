@@ -102,7 +102,7 @@ class DenseNet():
             layers_concat = list()
             k = math.floor(math.log(nb_layers, 2))
             
-            for i in range(k):
+            for i in range(k + 1):
                 p2k = 2**i
                 x = Concat(layers_concat)
                 x = self.bottleneck_layer(x, scope=layer_name + '_bottleN_' + str(p2k))
@@ -122,6 +122,26 @@ class DenseNet():
         x = self.dense_block(input_x = x, nb_layers = 32, layer_name = 'dense_3')
         x = self.transition_layer(x, scope='trans_3')
         x = self.dense_block(input_x = x, nb_layers = 32, layer_name = 'dense_4')
+        
+        x = Batch_Normalization(x, training = self.training, scope = 'linear_batch')
+        x = Relu(x)
+        x = Global_Average_Pooling(x)
+        x = flatten(x)
+        x = Linear(x)
+
+        return x
+    
+    def Log_DenseNet(self, input_x):
+        x = Conv(input_x, filter = 2 * self.filters, kernel = [7,7], stride = 2, layer_name = 'conv0')
+        
+        #DenseNet169
+        x = self.log_dense_block(input_x = x, nb_layers = 6, layer_name = 'dense_1')
+        x = self.transition_layer(x, scope = 'trans_1')
+        x = self.log_dense_block(input_x = x, nb_layers = 12, layer_name = 'dense_2')
+        x = self.transition_layer(x, scope = 'trans_2')
+        x = self.log_dense_block(input_x = x, nb_layers = 32, layer_name = 'dense_3')
+        x = self.transition_layer(x, scope='trans_3')
+        x = self.log_dense_block(input_x = x, nb_layers = 32, layer_name = 'dense_4')
         
         x = Batch_Normalization(x, training = self.training, scope = 'linear_batch')
         x = Relu(x)
